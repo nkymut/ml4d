@@ -7,7 +7,7 @@
 ml4d: machine learning for design is a design platform module conducted by @nkymut at the [Division of Industrial Design SDE NUS](http://did.nus.edu.sg/) during the 2017/2018 semester. Students have
 design&built interactive hardware prototypes to explore how the latest machine learning technologies can serve as a design tool to improve our of life.
 
-The concept of the platform was inspired by the works of  [The Wekinator](http://www.wekinator.org/) and [Machine Learning for Musicians and Artists](https://www.kadenze.com/courses/machine-learning-for-musicians-and-artists/info) by Dr. Rebecca Fiebrink and [ml4a](http://ml4a.github.io/) by Gene Kogan.
+The concept of the platform was inspired by [The Wekinator](http://www.wekinator.org/) and [Machine Learning for Musicians and Artists](https://www.kadenze.com/courses/machine-learning-for-musicians-and-artists/info) by Dr. Rebecca Fiebrink and [ml4a](http://ml4a.github.io/) by Gene Kogan.
  
 This repository contains a collection of sample codes used during the platform. 
 The codes are written in Python using cross-platform modules to enable seamless development between both Windows/Mac and Raspberry Pi. This feature allows rapid-prototyping of an interactive system using machine learning techniques.
