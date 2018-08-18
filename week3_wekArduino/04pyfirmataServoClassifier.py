@@ -1,10 +1,11 @@
 """
-Send CSV from Serial port to Wekinator Input 
+Firmata Servo Control with Wekinator Classifier Output
+
 
 """
-import pyglet
 
-import serial
+import pyglet
+from pyfirmata import Arduino, util
 
 import argparse
 import math
@@ -12,8 +13,6 @@ from threading import Thread
 
 from pythonosc import dispatcher
 from pythonosc import osc_server
-from pythonosc import udp_client
-
 from pyglet.window import key
 
 from wekinator import Wekinator 
@@ -22,16 +21,23 @@ class Window(pyglet.window.Window):
 
 
 	##Arduino Serial port setting.
-	#serialport = serial.Serial('/dev/cu.usbmodem1411') ##for Mac
-	#serialport = serial.Serial('/dev/ttyACM0')  ##for Raspberry Pi
-	serialport = serial.Serial("Com93")
+	#board = Arduino('/dev/cu.usbmodem1411') ##for Mac
+	board = Arduino('COM93')  ##for Windows
+	#board = Arduino('/dev/ttyACM0')  ##for Raspberry Pi
+	
+	##setup Servo pin
+	## refer pyFirmata Documentation for details
+	## https://media.readthedocs.org/pdf/pyfirmata/latest/pyfirmata.pdf
+	servo = board.get_pin('d:4:s')
 
-	readValues = [0,0,0]
+	#list of predefined servo angles
+	servoAngleList = [90,20,50,120,150]
+	servoAngleIdx = 0
 
-        
+
 	#initialize method
 	def __init__(self,*args, **kwargs):
-		super().__init__(width=512, height=512,caption="02pyserialCSV.py",
+		super().__init__(width=512, height=512,caption="04pyfirmataServoClassifier.py",
 								fullscreen=False,visible=True,resizable=False)
 		## initialize a label with text
 		## https://pyglet.readthedocs.io/en/pyglet-1.2-maintenance/api/pyglet/text/pyglet.text.Label.html
@@ -40,44 +46,35 @@ class Window(pyglet.window.Window):
 								x=self.width//2, y=self.height//2,
 								anchor_x='center', anchor_y='center')
 
-		## setup OSC client to Wekinator localhost port 6448 
-		##ToDo: move this to wekinator.py
-		self.wek_input = udp_client.SimpleUDPClient(args[0].ip, 6448) 
+		### initialize an OSC server to receive messages from Wekinator.
+		self.wek_output = Wekinator(args[0].ip,args[0].port,self.on_wekinator_message)
 
 		### set an update function at an interval of 1/60 sec
 		pyglet.clock.schedule_interval(self.update, 1/60.0)
 	
 	def update(self,dt,):
-			
-		values = self.read_csv_serial()
-		label.text = "({:.2f},{:.2f},{:.2f})".format(values[0],values[1],values[2])
-		wek_send_message("/wek/inputs",values)
+		self.servoAngle = self.servoAngleList[self.servoAngleIdx]
+		self.label.text = "ServoAngle:({},{})".format(self.servoAngleIdx,self.servoAngle)
+		self.servo.write(self.servoAngle)
 
 	#drawing method 
 	def on_draw(self):
 		self.clear()
 		self.label.draw() # draw the label
+	def on_key_press(symbol, modifiers):
 
-	def read_csv_serial(self):
-		str = self.serialport.readline().decode().strip('\r\n')
-		print("Serial:{}".format(str))
-		values = str.split(",")
-		values = [float(i) for i in values]
-		return values
+		if symbol == key._1:
+			self.servoAngleIdx = 0
+		elif symbol == key._2:
+			self.servoAngleIdx = 1
+		elif symbol == key._3:
+			self.servoAngleIdx = 2  
+		elif symbol == key._4:
+			self.servoAngleIdx = 3  
+		elif symbol == key._5:
+			self.servoAngleIdx = 4
 
-	"""
-  
-	sending message to wekinator input.
-	addr: contains OSC address such as "/wek/outputs"
-	args: a value or list of values to be sent by OSC message
-	"""
-
-	def wek_send_message(addr, args):
-		print("Address: {} {}".format(len(args),",".join(str(x) for x in args)))
-		# msg = osc_message_builder.OscMessageBuilder(address="/wek/inputs")
-		# # Add 3 messages in the bundle, each with more arguments.
-
-		self.wek_input.send_message("/wek/inputs", args)
+	
 	
 	"""
 	this function is called(dispatched) when the program received 
@@ -85,19 +82,19 @@ class Window(pyglet.window.Window):
 	addr: contains OSC address such as "/wek/outputs"
 	*args: list of values sent by OSC message
 	"""
-	def on_wekinator_message(self, addr, *args):
+	def on_wekinator_message(self,addr, *args):
 		## print out incoming message
 		print("Address: {} {}".format(addr,",".join(str(x) for x in args)))
 
-		## assign first value as a hand indexes (0:rock 1:paper 2:scissors 3:none)
-		## hand_idx variable is a global variable, changes made here will be applied 
-		## to the entire program.
-		if(len(args) == 3):
-			self.rgbLedValues = [args[0],args[1],args[2]]
+		## assign servo angle value
+		if(len(args) == 1):
+			if args[0] - 1 < len(self.servoAngleList):
+				self.servoAngleIdx = int(args[0]) - 1
+				self.servoAngle = self.servoAngleList[self.servoAngleIdx]
 
-		## print out received hand.
-		print("RGB: ({},{},{})".format(self.rgbLedValues[0],self.rgbLedValues[1],self.rgbLedValues[2]))
-	
+				## print out received hand.
+				print("ServoAngle: ({},{})".format(self.servoAngleIdx,self.servoAngleList[self.servoAngleIdx]))
+
 
 
 """

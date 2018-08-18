@@ -1,6 +1,14 @@
-"""Wekinator Input Receiver
+"""
+Wekinator Rock Paper Scissors Game
 
-This program listens to "/wek/outputs", and prints out received packets.
+This program listens to "/wek/outputs", and displays the corresponding image.
+/wek/outputs/0 rock.png
+/wek/outputs/1 paper.png
+/wek/outputs/2 scissors.png
+/wek/outputs/3 empty.png
+
+GameLogic displays the hand always win against you.
+
 """
 import pyglet
 from pyglet.gl import *
@@ -18,16 +26,13 @@ import random
 from wekinator import Wekinator 
 
 
-"""
-global variables
 
-hands : list of hand's name
-self.hand_idx: index value of the current hand selection
-
-"""
 
 class RPCApp(pyglet.window.Window):
-    
+    """
+    hands : list of hand's name
+    self.hand_idx: index value of the current hand selection
+    """
     hands = ["Rock","Paper","Scissors"," "]
     hands_dict = {"Rock":0,"Paper":1, "Scissors":2}
     hand_idx = 0
@@ -62,14 +67,14 @@ class RPCApp(pyglet.window.Window):
 
         ### loading images
         ###  images are stored under "image" folder
-        rock_image = pyglet.resource.image('image/rock_s.png')
-        paper_image = pyglet.resource.image('image/paper_s.png')
-        scissors_image = pyglet.resource.image('image/scissors_s.png')
-        none_image = pyglet.resource.image('image/Empty.png')
+        rock_image = pyglet.resource.image('image/rock.png')
+        paper_image = pyglet.resource.image('image/paper.png')
+        scissors_image = pyglet.resource.image('image/scissors.png')
+        none_image = pyglet.resource.image('image/empty.png')
 
-        enemy_rock_image = pyglet.resource.image('image/rock_s.png', flip_x=True)
-        enemy_paper_image = pyglet.resource.image('image/paper_s.png',flip_x=True)
-        enemy_scissors_image = pyglet.resource.image('image/scissors_s.png',flip_x=True)
+        enemy_rock_image = pyglet.resource.image('image/rock.png', flip_x=True)
+        enemy_paper_image = pyglet.resource.image('image/paper.png',flip_x=True)
+        enemy_scissors_image = pyglet.resource.image('image/scissors.png',flip_x=True)
    
 
         ### create a list of images and set a default image
@@ -111,7 +116,6 @@ class RPCApp(pyglet.window.Window):
       
     """     
     def game_logic(self, hand_idx, enemy_hand_idx):
-
 
 
         enemy_hand_idx = random.randint(0,2);
@@ -219,58 +223,8 @@ if __name__ == "__main__":
   args = parser.parse_args()
 
 
-  ### initialize an OSC server to receive messages from Wekinator.
-  #server = Wekinator(args.ip,args.port,wek_message_handler)
   ##create window
-  window = App(args, width=640, height=480)
-
-  ### start pyglet app
-  pyglet.app.run()
-
-
-
-
-
-
-
-
-"""
-  set text  to the label in the pyglet window. 
-"""  
-def set_label_text(label,message):
-
-    label.text = message
-
-
-
-
-
-
-
-
-"""
-  main routine to initialize the program
-
-"""
-if __name__ == "__main__":
-  """
-   checking command line options here.
-   you can specify ip address and port number from 
-   command line by adding "arguments" 
-
-   python ****.py --ip "127.0.0.1" --port 12000 
-
-  """ 
-  parser = argparse.ArgumentParser()
-  parser.add_argument("--ip",
-      default="127.0.0.1", help="The ip to listen on")
-  parser.add_argument("--port",
-      type=int, default=12000, help="The port to listen on")
-  args = parser.parse_args()
-
-
-  ##create window
-  window = App(args, width=640, height=480)
+  window = RPCApp(args, width=640, height=480)
 
   ### start pyglet app
   pyglet.app.run()

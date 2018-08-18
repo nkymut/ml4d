@@ -1,10 +1,11 @@
 """
-Send CSV from Serial port to Wekinator Input 
+03pyfirmata3KnobInputs
+Send 3 Potentiometer values to Wekinator as inputs
 
 """
-import pyglet
 
-import serial
+import pyglet
+from pyfirmata import Arduino, util
 
 import argparse
 import math
@@ -13,7 +14,6 @@ from threading import Thread
 from pythonosc import dispatcher
 from pythonosc import osc_server
 from pythonosc import udp_client
-
 from pyglet.window import key
 
 from wekinator import Wekinator 
@@ -22,16 +22,24 @@ class Window(pyglet.window.Window):
 
 
 	##Arduino Serial port setting.
-	#serialport = serial.Serial('/dev/cu.usbmodem1411') ##for Mac
-	#serialport = serial.Serial('/dev/ttyACM0')  ##for Raspberry Pi
-	serialport = serial.Serial("Com93")
+	#board = Arduino('/dev/cu.usbmodem1411') ##for Mac
+	board = Arduino('COM93')  ##for Windows
+	#board = Arduino('/dev/ttyACM0')  ##for Raspberry Pi
+	
+	## setup potentiometer inputs
+	## refer pyFirmata Documentation for details
+	## https://media.readthedocs.org/pdf/pyfirmata/latest/pyfirmata.pdf
+	knobs = []
+	knobs.append(board.get_pin('a:0:i')) ## set "a"nalog pin "o" as "i"nput
+	knobs.append(board.get_pin('a:1:i')) ## set "a"nalog pin "o" as "i"nput
+	knobs.append(board.get_pin('a:2:i')) ## set "a"nalog pin "o" as "i"nput
 
-	readValues = [0,0,0]
+	knobValues = [0,0,0]
 
         
 	#initialize method
 	def __init__(self,*args, **kwargs):
-		super().__init__(width=512, height=512,caption="02pyserialCSV.py",
+		super().__init__(width=512, height=512,caption="02pyfirmataRGBled.py",
 								fullscreen=False,visible=True,resizable=False)
 		## initialize a label with text
 		## https://pyglet.readthedocs.io/en/pyglet-1.2-maintenance/api/pyglet/text/pyglet.text.Label.html
@@ -48,23 +56,20 @@ class Window(pyglet.window.Window):
 		pyglet.clock.schedule_interval(self.update, 1/60.0)
 	
 	def update(self,dt,):
-			
-		values = self.read_csv_serial()
-		label.text = "({:.2f},{:.2f},{:.2f})".format(values[0],values[1],values[2])
-		wek_send_message("/wek/inputs",values)
+		
+		self.knobValues[0] = float(self.knobs[0].read())
+		self.knobValues[1] = float(self.knobs[1].read())
+		self.knobValues[2] = float(self.knobs[2].read())
+		
+		pyglet.gl.glClearColor(self.knobValues[0],self.knobValues[1],self.knobValues[2],1.)
+		self.label.text = "({:.2f},{:.2f},{:.2f})".format(self.knobValues[0],self.knobValues[1],self.knobValues[2])
 
+		wek_send_message("/wek/inputs",self.knobValues)
+		
 	#drawing method 
 	def on_draw(self):
 		self.clear()
 		self.label.draw() # draw the label
-
-	def read_csv_serial(self):
-		str = self.serialport.readline().decode().strip('\r\n')
-		print("Serial:{}".format(str))
-		values = str.split(",")
-		values = [float(i) for i in values]
-		return values
-
 	"""
   
 	sending message to wekinator input.
