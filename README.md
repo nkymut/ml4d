@@ -19,7 +19,7 @@ The codes are written in Python using cross-platform modules to enable seamless 
 
 ## Requirements
 ----------
-1. Python 3.6
+1. Python3
 2. RaspberryPi 2 or newer ([Raspbian Stretch](https://www.raspberrypi.org/downloads/raspbian/)) 
 3. OpenCV
 4. pyglet
